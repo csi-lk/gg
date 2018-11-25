@@ -1,0 +1,255 @@
+#!/usr/bin/env bash
+
+VERSION="1.0.0"
+
+# Colors and formatting
+# --------------------------------------------------------------------
+
+grey() {
+	printf "\e[0;90m$1\e[0m"
+}
+
+green() {
+	printf "\e[0;32m$1\e[0m"
+}
+
+red() {
+	printf "\e[1;31m$1\e[0m"
+}
+
+yellow() {
+	printf "\e[0;33m$1\e[0m"
+}
+
+blue() {
+	printf "\e[0;36m$1\e[0m"
+}
+
+# Utility
+# --------------------------------------------------------------------
+
+current_branch() {
+	git symbolic-ref --short HEAD
+}
+
+all_branches() {
+    clear
+    branches=$(git for-each-ref --format='%(refname:short)' refs/heads/)
+	branches_array=()
+    echo $(blue "All Branches:")
+	while read -r line; do
+		branches_array+=("$line")
+	done <<< "$branches"
+        for branch in "${branches_array[@]}"; do
+            if [ "$branch" == "$(current_branch)" ]; then
+                printf "|- "
+                green "$branch\n"
+            else
+                printf "\e[2m|- %s\n\e[22m" "$branch"
+            fi
+        done
+}
+
+number_of_commits() {
+    git rev-list --count HEAD ^master
+}
+
+err_missing_param() {
+    cat <<-EOF
+
+    $(red "Missing parameter: $1")
+        $(green "gg") $(yellow "$2") $(red "<$1>")
+
+EOF
+    exit 0 
+}
+
+unknown_command() {
+    cat <<-EOF
+
+    $(red "Unknown command: '$1'")
+
+EOF
+    exit 0 
+}
+
+# Commands
+# --------------------------------------------------------------------
+
+status() {
+    # TODO: Color output
+    clear
+    git status
+}
+
+checkout() {
+    # TODO: Color output
+    # TODO: Success message
+    if [ -z "$1" ]; then
+        err_missing_param "thing to checkout" "ch"
+	else
+		checkoutItem="$1"
+        git checkout $checkoutItem
+    fi
+}
+
+pull() {
+    # TODO: Color output eg. https://github.com/qw3rtman/gg/blob/7bb8a485fe8c9e52723931dc4713be656a894944/bin/gg#L466
+    git pull
+}
+
+push() {
+    # TODO: Color output
+    # TODO: Check if anything to push
+    git push --set-upstream origin $(current_branch)
+}
+
+push_force() {
+    # TODO: Color output
+    echo $(red "Strap in, we're force pushing...")
+    git push --force
+}
+
+log() {
+    clear
+    git log -35 --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+}
+
+latest_commit_message() {
+    git log -1 --graph --pretty=format:'%Cred%h%Creset - %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+}
+
+checkout_pull_rebase() {
+    git checkout master && git pull && git checkout $(current_branch) && git rebase master
+}
+
+rebase() {
+    if [ -z "$1" ]; then
+        numCommits=$(number_of_commits)
+	else
+		numCommits="$1"
+    fi
+    git rebase HEAD~$numCommits -i
+}
+
+rebase_continue() {
+    git rebase --continue
+}
+
+stash() {
+    git add -A && git stash
+}
+
+stashpop() {
+    git stash pop
+}
+
+clean() {
+    clear
+    echo $(green "Cleaning all branches that do not exist on remote:")
+    git remote prune origin
+    git branch --merged master | grep -v '^[ *]*master$' | xargs git branch -d
+    echo $(green "Done") && sleep 4
+    all_branches
+}
+
+branch() {
+    # TODO: Color output
+    # TODO: Handle branch already existing
+    if [ -z "$1" ]; then
+        all_branches
+	else
+		git checkout -b $1
+    fi
+}
+
+branch_delete() {
+    # TODO: Color output
+    # TODO: Handle branch not existing for delete
+    if [ -z "$1" ]; then
+        err_missing_param "branch name to delete" "bd"
+	else
+		git branch -D $1
+    fi
+}
+
+commit_fixup() {
+    # TODO: Handle scoping
+    if [ -z "$1" ]; then
+        err_missing_param "scope to commit fixup" "cf"
+	else
+        echo $(green "Creating fixup commit for $1:")
+        git commit -m "fixup $1" --no-verify
+        rebase $(number_of_commits)
+    fi
+}
+
+pull_request() {
+    origin=$(git remote get-url origin)
+    url=${origin/.git} # remove .git
+    url=${url/git@github.com:/https://github.com/} # if git path replace with https
+    echo $(green "Opening pull request for branch: $(current_branch)")
+    open "${url}/compare/$(current_branch)?quick_pull=1"
+}
+
+display_help() {
+	cat <<-EOF
+
+    $(green "gg") » simple git aliases $(grey "by Callum Silcock")
+
+    $(green "gg") $(yellow "s")          $(grey "|") git status
+    $(green "gg") $(yellow "ch <thing>") $(grey "|") git checkout <thing>
+    $(green "gg") $(yellow "pl")         $(grey "|") git pull
+    $(green "gg") $(yellow "cpr")        $(grey "|") git checkout master && git pull && git checkout <currentBranch> && git rebase master
+    $(green "gg") $(yellow "p")          $(grey "|") git push
+    $(green "gg") $(yellow "pf")         $(grey "|") git push force
+    $(green "gg") $(yellow "l")          $(grey "|") git history oneline
+    $(green "gg") $(yellow "lc")         $(grey "|") git history latest commit
+    $(green "gg") $(yellow "r <number>") $(grey "|") git rebase HEAD~<number> -i
+    $(green "gg") $(yellow "st")         $(grey "|") add all files and stash
+    $(green "gg") $(yellow "stp")        $(grey "|") stash pop latest
+    $(green "gg") $(yellow "clean")      $(grey "|") delete local branches not on master
+    $(green "gg") $(yellow "b <name>")   $(grey "|") create and checkout branch <name>, if exists check it out
+    $(green "gg") $(yellow "bd <name>")  $(grey "|") delete branch
+    $(green "gg") $(yellow "cf <scope>") $(grey "|") git commit fixup <scope>
+    $(green "gg") $(yellow "pr")         $(grey "|") create new github pull request for current branch
+
+    $(grey "TODO:")
+
+    $(green "gg") $(yellow "c <scope>")  $(grey "|") git commit <scope>
+
+EOF
+    exit 0
+}
+
+# Interface
+# --------------------------------------------------------------------
+
+if test $# -eq 0; then
+	display_help
+else
+	while test $# -ne 0; do
+		case $1 in
+			s|status) status ;;
+			ch|checkout) checkout $2; exit ;;
+			pl|pull) pull ;;
+			cpr|checkout_pull_rebase) checkout_pull_rebase ;;
+			p|push) push ;;
+			pf|fp|force|pushforce) push_force ;;
+			l|log|hist|history) log ;;
+			lc|latest|latest_commit) latest_commit_message ;;
+			r|rebase) rebase $2; exit ;;
+			rc|continue) rebase_continue ;;
+			st|stash) stash ;;
+			stp|stashpop) stashpop ;;
+			clean|cleanup) clean ;;
+			b|branch) branch $2; exit ;;
+            bd|branch_delete) branch_delete $2; exit ;;
+            cf|fix|fixup) commit_fixup $2; exit ;;
+			pr|pullrequest) pull_request ;;            
+			-h|--help|help) display_help ;;
+			*) unknown_command "$@"; exit 1 ;;
+		esac
+		shift
+	done
+fi
