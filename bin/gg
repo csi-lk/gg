@@ -61,7 +61,7 @@ err_missing_param() {
         $(green "gg") $(yellow "$2") $(red "<$1>")
 
 EOF
-    exit 0 
+    exit 1
 }
 
 unknown_command() {
@@ -70,7 +70,7 @@ unknown_command() {
     $(red "Unknown command: '$1'")
 
 EOF
-    exit 0 
+    exit 1
 }
 
 # Commands
@@ -87,6 +87,7 @@ checkout() {
     # TODO: Success message
     if [ -z "$1" ]; then
         err_missing_param "thing to checkout" "ch"
+        exit 1
 	else
 		checkoutItem="$1"
         git checkout $checkoutItem
