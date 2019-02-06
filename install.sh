@@ -3,14 +3,14 @@ green() {
 }
 
 install() {
-	$(green "Downloading script..")
-	curl -L#o /var/tmp/gg_$$ https://raw.githubusercontent.com/csi-lk/gg/blob/master/bin/gg
-    $(green "Setting permissions..")
+	echo $(green "Downloading script...")
+	curl -L#o /var/tmp/gg_$$ https://raw.githubusercontent.com/csi-lk/gg/master/bin/gg
+    echo $(green "Setting permissions...")
 	chmod -v +x /var/tmp/gg_$$
-    $(green "Moving to \$PATH..")
+    echo $(green "Moving to \$PATH")
 	sudo mv -fv /var/tmp/gg_$$ /usr/local/bin/gg
 	version=($(gg -V))
-	$(green "Successfully installed! v${version}")
+	echo $(green "Successfully installed! v${version}")
 }
 
 install
