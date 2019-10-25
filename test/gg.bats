@@ -163,6 +163,30 @@ teardown() {
     assert_line --partial "Opening pull request for branch: master"
 }
 
+@test "Tag create" {
+    git remote add origin https://github.com/csi-lk/gg
+    run gg t test-tag
+    assert_success
+    run gg t
+    assert_line --partial "test-tag"
+}
+
+@test "Tag delete" {
+    git remote add origin https://github.com/csi-lk/gg
+    run gg t test-tag
+    assert_success
+    run gg td test-tag
+    assert_success
+    assert_line --partial "Deleted tag 'test-tag'"
+}
+
+@test "Tag delete: no param" {
+    git remote add origin https://github.com/csi-lk/gg
+    run gg td
+    assert_failure
+    assert_line --partial "Missing parameter: tag name to delete"
+}
+
 @test "Display Help" {
     run gg -h
     assert_success
