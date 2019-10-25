@@ -61,10 +61,22 @@ Install bats with brew (macOS)
 brew install bats
 ```
 
+or with yarn / npm
+
+```bash
+yarn install
+```
+
 ### Running
 
 ```bash
 bats test
+```
+
+or
+
+```bash
+yarn test
 ```
 
 ---
