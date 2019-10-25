@@ -47,6 +47,28 @@ teardown() {
     assert_line --partial "On branch master"
 }
 
+@test "Add: all files" {
+    run touch test1.md
+    run gg a
+    assert_success
+    assert_line --partial "Added all files"
+    assert_line --partial "new file:   test1.md"
+}
+
+@test "Add: specfic file" {
+    run touch test2.md
+    run gg a test2.md
+    assert_success
+    assert_line --partial "Added: test2.md"
+    assert_line --partial "new file:   test2.md"
+}
+
+@test "Status" {
+    run gg s
+    assert_success
+    assert_line --partial "On branch master"
+}
+
 @test "Checkout: no param" {
     run gg ch
     assert_failure

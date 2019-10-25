@@ -95,6 +95,18 @@ status() {
     git status
 }
 
+add() {
+    if [ -z "$1" ]; then
+        git add -A
+        echo $(green "Added all files")
+	else
+		toAdd="$1"
+        echo $(green "Added: $toAdd")
+        git add $toAdd
+    fi
+    git status
+}
+
 checkout() {
     # TODO: Color output
     # TODO: Success message
@@ -232,6 +244,8 @@ display_help() {
     $(green "gg") » simple git aliases $(grey "by Callum Silcock")
 
     $(green "gg") $(yellow "s")          $(grey "|") git status
+    $(green "gg") $(yellow "a")          $(grey "|") git add -A
+    $(green "gg") $(yellow "a <file>")   $(grey "|") git add <file>
     $(green "gg") $(yellow "ch <thing>") $(grey "|") git checkout <thing>
     $(green "gg") $(yellow "pl")         $(grey "|") git pull
     $(green "gg") $(yellow "cpr")        $(grey "|") git checkout master && git pull && git checkout <currentBranch> && git rebase master
@@ -267,6 +281,7 @@ else
 	while test $# -ne 0; do
 		case $1 in
 			s|status) status ;;
+			a|add) add $2; exit ;;
 			ch|checkout) checkout $2; exit ;;
 			pl|pull) pull ;;
 			cpr|checkout_pull_rebase) checkout_pull_rebase ;;
