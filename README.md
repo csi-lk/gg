@@ -16,28 +16,34 @@ curl -fsSL git.io/fpEqU | bash
 
 ## Usage
 
-```markdown
-gg » simple git aliases by Callum Silcock
-
-gg s          | git status
-gg ch <thing> | git checkout <thing>
-gg pl         | git pull
-gg cpr        | git checkout master && git pull && git checkout <currentBranch> && git rebase master
-gg p          | git push
-gg pf         | git push force
-gg l          | git history oneline
-gg lc         | git history latest commit
-gg r <number> | git rebase HEAD~<number> -i
-gg st         | add all files and stash
-gg stp        | stash pop latest
-gg clean      | delete local branches not on master
-gg b <name>   | create and checkout branch <name>, if exists check it out
-gg bd <name>  | delete branch
-gg cf <scope> | git commit fixup <scope>
-gg pr         | create new github pull request for current branch
-```
+| command       | does                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------ |
+| gg s          | git status                                                                           |
+| gg ch <thing> | git checkout <thing>                                                                 |
+| gg pl         | git pull                                                                             |
+| gg cpr        | git checkout master && git pull && git checkout <currentBranch> && git rebase master |
+| gg p          | git push                                                                             |
+| gg pf         | git push force                                                                       |
+| gg l          | git history oneline                                                                  |
+| gg lc         | git history latest commit                                                            |
+| gg r <number> | git rebase HEAD~<number> -i                                                          |
+| gg st         | add all files and stash                                                              |
+| gg stp        | stash pop latest                                                                     |
+| gg clean      | delete local branches not on master                                                  |
+| gg b <name>   | create and checkout branch <name>, if exists check it out                            |
+| gg bd <name>  | delete branch                                                                        |
+| gg cf <scope> | git commit fixup <scope>                                                             |
+| gg pr         | create new github pull request for current branch                                    |
+| gg t          | create a tag                                                                         |
+| gg td <name>  | delete a tag <name>                                                                  |
 
 ## Development
+
+Make sure you clone recursivley as am using submodules for bats
+
+```bash
+git clone --recursive git@github.com:csi-lk/gg.git
+```
 
 All functions are in the one file, the [gg bin](./bin/gg)
 
@@ -46,6 +52,20 @@ All functions are in the one file, the [gg bin](./bin/gg)
 Unit testing using [bats](https://github.com/sstephenson/bats) with [support](https://github.com/ztombol/bats-support) and [assert](https://github.com/ztombol/bats-assert) libs
 
 All tests are defined in [the one file](./test/gg.bats)
+
+### Setting Up
+
+Install bats with brew (macOS)
+
+```bash
+brew install bats
+```
+
+### Running
+
+```bash
+bats test
+```
 
 ---
 
