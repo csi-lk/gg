@@ -19,6 +19,8 @@ curl -fsSL git.io/fpEqU | bash
 | command       | does                                                                                 |
 | ------------- | ------------------------------------------------------------------------------------ |
 | gg s          | git status                                                                           |
+| gg a          | git add -A                                                                           |
+| gg a <file>   | git add <file>                                                                       |
 | gg ch <thing> | git checkout <thing>                                                                 |
 | gg pl         | git pull                                                                             |
 | gg cpr        | git checkout master && git pull && git checkout <currentBranch> && git rebase master |
