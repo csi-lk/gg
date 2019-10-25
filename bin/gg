@@ -50,6 +50,19 @@ all_branches() {
         done
 }
 
+all_tags() {
+    clear
+    tags=$(git tag)
+	tags_array=()
+    echo $(blue "All Tags:")
+	while read -r line; do
+		tags_array+=("$line")
+	done <<< "$tags"
+        for tag in "${tags_array[@]}"; do
+            printf "\e[2m|- %s\n\e[22m" "$tag"
+        done
+}
+
 number_of_commits() {
     git rev-list --count HEAD ^master
 }
@@ -193,6 +206,26 @@ pull_request() {
     open "${url}/compare/$(current_branch)?quick_pull=1"
 }
 
+tag() {
+    # TODO: Color output
+    # TODO: Handle tag already existing
+    if [ -z "$1" ]; then
+        all_tags
+	else
+		git tag $1
+    fi
+}
+
+tag_delete() {
+    # TODO: Color output
+    # TODO: Handle tag not existing to delete
+    if [ -z "$1" ]; then
+        err_missing_param "tag name to delete" "td"
+	else
+		git tag -d $1
+    fi
+}
+
 display_help() {
 	cat <<-EOF
 
@@ -214,6 +247,8 @@ display_help() {
     $(green "gg") $(yellow "bd <name>")  $(grey "|") delete branch
     $(green "gg") $(yellow "cf <scope>") $(grey "|") git commit fixup <scope>
     $(green "gg") $(yellow "pr")         $(grey "|") create new github pull request for current branch
+    $(green "gg") $(yellow "t")          $(grey "|") create a tag
+    $(green "gg") $(yellow "td <name>")  $(grey "|") delete a tag <name>
 
     $(grey "TODO:")
 
@@ -247,7 +282,9 @@ else
 			b|branch) branch $2; exit ;;
             bd|branch_delete) branch_delete $2; exit ;;
             cf|fix|fixup) commit_fixup $2; exit ;;
-			pr|pullrequest) pull_request ;;            
+			pr|pullrequest) pull_request ;;
+            t|tag) tag $2; exit ;;
+            td|tagdelete) tag_delete $2; exit ;;
 			-h|--help|help) display_help ;;
 			*) unknown_command "$@"; exit 1 ;;
 		esac
