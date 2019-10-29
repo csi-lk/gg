@@ -67,6 +67,13 @@ number_of_commits() {
     git rev-list --count HEAD ^master
 }
 
+repo_url() {
+    origin=$(git remote get-url origin)
+    url=${origin/.git} # remove .git
+    url=${url/ssh:\/\/git@github.com\//https://github.com/} # if ssh path replace with https
+    echo ${url/git@github.com:/https://github.com/} # if git path replace with https
+}
+
 err_missing_param() {
     cat <<-EOF
 
@@ -217,11 +224,13 @@ commit_fixup() {
 }
 
 pull_request() {
-    origin=$(git remote get-url origin)
-    url=${origin/.git} # remove .git
-    url=${url/git@github.com:/https://github.com/} # if git path replace with https
     echo $(green "Opening pull request for branch: $(current_branch)")
-    open "${url}/compare/$(current_branch)?quick_pull=1"
+    open "$(repo_url)/compare/$(current_branch)?quick_pull=1"
+}
+
+open_url() {
+    echo $(green "Opening repo url: $(repo_url)")
+    open $(repo_url)
 }
 
 tag() {
@@ -267,6 +276,7 @@ display_help() {
     $(green "gg") $(yellow "b <name>")   $(grey "|") create and checkout branch <name>, if exists check it out
     $(green "gg") $(yellow "bd <name>")  $(grey "|") delete branch
     $(green "gg") $(yellow "cf <scope>") $(grey "|") git commit fixup <scope>
+    $(green "gg") $(yellow "o")          $(grey "|") open repo url
     $(green "gg") $(yellow "pr")         $(grey "|") create new github pull request for current branch
     $(green "gg") $(yellow "t")          $(grey "|") create a tag
     $(green "gg") $(yellow "td <name>")  $(grey "|") delete a tag <name>
@@ -306,6 +316,7 @@ else
             bd|branch_delete) branch_delete $2; exit ;;
             cf|fix|fixup) commit_fixup $2; exit ;;
 			pr|pullrequest) pull_request ;;
+			o|open) open_url ;;
             t|tag) tag $2; exit ;;
             td|tagdelete) tag_delete $2; exit ;;
 			-h|--help|help) display_help ;;
