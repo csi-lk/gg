@@ -189,7 +189,7 @@ teardown() {
     git remote add origin https://github.com/csi-lk/gg
     run gg o
     assert_success
-    assert_line "Opening repo url: https://github.com/csi-lk/gg"
+    assert_line --partial "Opening repo url: https://github.com/csi-lk/gg"
 }
 
 @test "Tag create" {
