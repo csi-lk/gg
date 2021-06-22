@@ -102,6 +102,11 @@ status() {
     git status
 }
 
+fetch() {
+    echo $(green "Fetching...")
+    git fetch
+}
+
 add() {
     if [ -z "$1" ]; then
         git add -A
@@ -151,15 +156,16 @@ push_force() {
 
 log() {
     clear
-    git log -35 --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+    git log -35 --pretty=format:"%C(auto,yellow)%h%C(auto,magenta)% G?%C(auto,blue)%>(12,trunc)%ad %C(auto,green)%<(15,trunc)%aN%C(auto,reset)%s%C(auto,red)% gD% D" --date=short
 }
 
 latest_commit_message() {
-    git log -1 --graph --pretty=format:'%Cred%h%Creset - %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+    git log -1 --pretty=format:"%C(auto,yellow)%h%C(auto,magenta)% G?%C(auto,blue)%>(12,trunc)%ad %C(auto,green)%<(15,trunc)%aN%C(auto,reset)%s%C(auto,red)% gD% D" --date=short
 }
 
-checkout_pull_rebase() {
-    git checkout master && git pull && git checkout $(current_branch) && git rebase master
+fetch_rebase_master() {
+    fetch
+    git rebase origin/master
 }
 
 rebase() {
@@ -259,12 +265,13 @@ display_help() {
     $(green "gg") » simple git aliases $(grey "by Callum Silcock")
 
     $(green "gg") $(yellow "s")          $(grey "|") git status
+    $(green "gg") $(yellow "f")          $(grey "|") git fetch
     $(green "gg") $(yellow "a")          $(grey "|") git add -A
     $(green "gg") $(yellow "a <file>")   $(grey "|") git add <file>
     $(green "gg") $(yellow "ca")         $(grey "|") git commit --amend
     $(green "gg") $(yellow "ch <thing>") $(grey "|") git checkout <thing>
     $(green "gg") $(yellow "pl")         $(grey "|") git pull
-    $(green "gg") $(yellow "cpr")        $(grey "|") git checkout master && git pull && git checkout <currentBranch> && git rebase master
+    $(green "gg") $(yellow "cpr")        $(grey "|") git fetch && git rebase origin/master
     $(green "gg") $(yellow "p")          $(grey "|") git push
     $(green "gg") $(yellow "pf")         $(grey "|") git push force
     $(green "gg") $(yellow "l")          $(grey "|") git history oneline
@@ -298,11 +305,12 @@ else
 	while test $# -ne 0; do
 		case $1 in
 			s|status) status ;;
+            f|fetch) fetch ;;
 			a|add) add $2; exit ;;
 			ca|commit_amend) commit_amend ;;
 			ch|checkout) checkout $2; exit ;;
 			pl|pull) pull ;;
-			cpr|checkout_pull_rebase) checkout_pull_rebase ;;
+			cpr|fetch_rebase_master) fetch_rebase_master ;;
 			p|push) push ;;
 			pf|fp|force|pushforce) push_force ;;
 			l|log|hist|history) log ;;
