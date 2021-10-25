@@ -22,7 +22,9 @@ curl -fsSL git.io/fpEqU | bash
 | gg f            | git fetch                                                   |
 | gg a            | git add -A                                                  |
 | gg a `<file>`   | git add `<file>`                                            |
+| gg c            | git commit (prompts for conventional commit style commits)  |
 | gg ca           | git commit --amend                                          |
+| gg can          | git commit --amend --no-edit                                |
 | gg ch `<thing>` | git checkout `<thing>`                                      |
 | gg pl           | git pull                                                    |
 | gg cpr          | git fetch && git rebase origin/master                       |
