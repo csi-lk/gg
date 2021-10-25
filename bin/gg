@@ -70,8 +70,13 @@ number_of_commits() {
 repo_url() {
     origin=$(git remote get-url origin)
     url=${origin/.git} # remove .git
+    # Github
     url=${url/ssh:\/\/git@github.com\//https://github.com/} # if ssh path replace with https
-    echo ${url/git@github.com:/https://github.com/} # if git path replace with https
+    url=${url/git@github.com:/https://github.com/} # if git path replace with https
+    # Gitlab
+    url=${url/ssh:\/\/git@gitlab.com\//https://gitlab.com/} # if ssh path replace with https
+    url=${url/git@gitlab.com:/https://gitlab.com/} # if git path replace with https
+    echo $url
 }
 
 err_missing_param() {
@@ -231,7 +236,14 @@ commit_fixup() {
 
 pull_request() {
     echo $(green "Opening pull request for branch: $(current_branch)")
-    open "$(repo_url)/compare/$(current_branch)?quick_pull=1"
+    case "$(repo_url)" in 
+        *github*)
+            open "$(repo_url)/compare/$(current_branch)?quick_pull=1"
+        ;;
+        *gitlab*)
+            open "$(repo_url)/-/merge_requests/new?merge_request%5Bsource_branch%5D=$(current_branch)"
+        ;;
+    esac
 }
 
 open_url() {

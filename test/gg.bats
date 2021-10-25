@@ -178,18 +178,32 @@ teardown() {
     assert_line --partial "Missing parameter: branch name to delete"
 }
 
-@test "Pull Request" {
+@test "Github: Pull Request" {
     git remote add origin https://github.com/csi-lk/gg
     run gg pr
     assert_success
     assert_line --partial "Opening pull request for branch: master"
 }
 
-@test "Open URL" {
+@test "Gitlab: Pull Request" {
+    git remote add origin git@gitlab.com:csilk/gg.git
+    run gg pr
+    assert_success
+    assert_line --partial "Opening pull request for branch: master"
+}
+
+@test "Github: Open URL" {
     git remote add origin https://github.com/csi-lk/gg
     run gg o
     assert_success
     assert_line --partial "Opening repo url: https://github.com/csi-lk/gg"
+}
+
+@test "Gitlab: Open URL" {
+    git remote add origin git@gitlab.com:csilk/gg.git
+    run gg o
+    assert_success
+    assert_line --partial "Opening repo url: https://gitlab.com/csilk/gg"
 }
 
 @test "Tag create" {
