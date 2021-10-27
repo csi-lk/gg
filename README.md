@@ -40,6 +40,7 @@ curl -fsSL git.io/fpEqU | bash
 | gg bd `<name>`  | delete branch                                               |
 | gg cf `<scope>` | git commit fixup `<scope>`                                  |
 | gg pr           | create new github pull request for current branch           |
+| gg prl          | output changed since master in easy pr format to clipboard  |
 | gg o            | open repo url                                               |
 | gg t            | create a tag                                                |
 | gg td `<name>`  | delete a tag `<name>`                                       |

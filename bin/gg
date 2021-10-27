@@ -216,8 +216,17 @@ log() {
 	git log -35 --pretty=format:"%C(auto,yellow)%h%C(auto,magenta)% G?%C(auto,blue)%>(12,trunc)%ad %C(auto,green)%<(15,trunc)%aN%C(auto,reset)%s%C(auto,red)% gD% D" --date=short
 }
 
+pull_request_log() {
+	clear
+	grey "Log output for PR...\n\n"
+	pr_log=$(git log master.. --pretty=format:"%s%n%n%b")
+	echo -e "$pr_log \n"
+	echo "$pr_log" | pbcopy
+	green "Copied to clipboard\n\n"
+}
+
 latest_commit_message() {
-	git log -1 --pretty=format:"%C(auto,yellow)%h%C(auto,magenta)% G?%C(auto,blue)%>(12,trunc)%ad %C(auto,green)%<(15,trunc)%aN%C(auto,reset)%s%C(auto,red)% gD% D" --date=short
+	git log --pretty=format:"%C(auto,yellow)%h%C(auto,magenta)% G?%C(auto,blue)%>(12,trunc)%ad %C(auto,green)%<(15,trunc)%aN%C(auto,reset)%s%C(auto,red)% gD% D" --date=short
 }
 
 fetch_rebase_master() {
@@ -351,12 +360,9 @@ display_help() {
 	$(green "gg") $(yellow "cf <scope>") $(grey "|") git commit fixup <scope>
 	$(green "gg") $(yellow "o")          $(grey "|") open repo url
 	$(green "gg") $(yellow "pr")         $(grey "|") create new github pull request for current branch
+	$(green "gg") $(yellow "prl")        $(grey "|") output changed since master in easy pr format to clipboard
 	$(green "gg") $(yellow "t")          $(grey "|") create a tag
 	$(green "gg") $(yellow "td <name>")  $(grey "|") delete a tag <name>
-
-	$(grey "TODO:")
-
-	$(green "gg") $(yellow "c <scope>")  $(grey "|") git commit <scope>
 
 EOF
 	exit 0
@@ -392,6 +398,7 @@ else
 			bd|branch_delete) branch_delete $2; exit ;;
 			cf|fix|fixup) commit_fixup $2; exit ;;
 			pr|pullrequest) pull_request ;;
+			prl|pullrequestlog) pull_request_log ;;
 			o|open) open_url ;;
 			t|tag) tag $2; exit ;;
 			td|tagdelete) tag_delete $2; exit ;;
