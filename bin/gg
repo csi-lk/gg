@@ -101,6 +101,13 @@ EOF
 # Commands
 # --------------------------------------------------------------------
 
+init() {
+	# TODO: Color output
+	clear
+	output=($(git init))
+	green "\n${output[0]} ${output[1]} Git repository.\n\n"
+}
+
 status() {
 	# TODO: Color output
 	clear
@@ -337,6 +344,7 @@ display_help() {
 
 	$(green "gg") » simple git aliases $(grey "by Callum Silcock")
 
+	$(green "gg") $(yellow "i")          $(grey "|") git init
 	$(green "gg") $(yellow "s")          $(grey "|") git status
 	$(green "gg") $(yellow "f")          $(grey "|") git fetch
 	$(green "gg") $(yellow "a")          $(grey "|") git add -A
@@ -360,7 +368,7 @@ display_help() {
 	$(green "gg") $(yellow "cf <scope>") $(grey "|") git commit fixup <scope>
 	$(green "gg") $(yellow "o")          $(grey "|") open repo url
 	$(green "gg") $(yellow "pr")         $(grey "|") create new github pull request for current branch
-	$(green "gg") $(yellow "prl")        $(grey "|") output changed since master in easy pr format to clipboard
+	$(green "gg") $(yellow "prl")        $(grey "|") output changed since master in easy pull request format
 	$(green "gg") $(yellow "t")          $(grey "|") create a tag
 	$(green "gg") $(yellow "td <name>")  $(grey "|") delete a tag <name>
 
@@ -376,6 +384,7 @@ if test $# -eq 0; then
 else
 	while test $# -ne 0; do
 		case $1 in
+			i|init) init ;;
 			s|status) status ;;
 			f|fetch) fetch ;;
 			a|add) add $2; exit ;;

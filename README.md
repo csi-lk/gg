@@ -18,6 +18,7 @@ curl -fsSL git.io/fpEqU | bash
 
 | command         | does                                                        |
 | --------------- | ----------------------------------------------------------- |
+| gg i            | git init                                                    |
 | gg s            | git status                                                  |
 | gg f            | git fetch                                                   |
 | gg a            | git add -A                                                  |
@@ -32,7 +33,7 @@ curl -fsSL git.io/fpEqU | bash
 | gg pf           | git push force                                              |
 | gg l            | git history oneline                                         |
 | gg lc           | git history latest commit                                   |
-| gg r `<number>` | git rebase HEAD~`<n`umber> -i                               |
+| gg r `<number>` | git rebase HEAD~`<number>` -i                               |
 | gg st           | add all files and stash                                     |
 | gg stp          | stash pop latest                                            |
 | gg clean        | delete local branches not on master                         |
