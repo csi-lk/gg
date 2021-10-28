@@ -11,7 +11,7 @@ TMP_DIRECTORY=$(mktemp -d)
 setup() {
     cd $TMP_DIRECTORY
     echo 'setting up'
-    git init
+    gg i
     git config user.email "test@csi.lk"
     git config user.name "gg test"
     echo "test file" > test_file
