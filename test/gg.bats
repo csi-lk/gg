@@ -206,6 +206,21 @@ teardown() {
     assert_line --partial "Opening repo url: https://gitlab.com/csilk/gg"
 }
 
+@test "Pull request log" {
+    git branch prl
+    run gg ch prl
+    echo "test prl" > test_prl
+    run gg a
+    run git commit -m "feat: test adding commit" -m "commit body" -m "TICKET-123"
+    run gg prl
+    assert_success
+    assert_line --partial "Log output for PR..."
+    assert_line --partial "feat:"
+    assert_line --partial "commit body"
+    assert_line --partial "TICKET"
+    assert_line --partial "Copied to clipboard"
+}
+
 @test "Tag create" {
     git remote add origin https://github.com/csi-lk/gg
     run gg t test-tag
