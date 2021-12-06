@@ -32,6 +32,10 @@ current_branch() {
 	git symbolic-ref --short HEAD
 }
 
+get_default_branch() {
+	git symbolic-ref --short refs/remotes/origin/HEAD | sed 's@^origin/@@'
+}
+
 all_branches() {
 	clear
 	branches=$(git for-each-ref --format='%(refname:short)' refs/heads/)
@@ -64,7 +68,7 @@ all_tags() {
 }
 
 number_of_commits() {
-	git rev-list --count HEAD ^master
+	git rev-list --count HEAD ^$(get_default_branch)
 }
 
 repo_url() {
@@ -226,7 +230,7 @@ log() {
 pull_request_log() {
 	clear
 	grey "Log output for PR...\n\n"
-	pr_log=$(git log master.. --pretty=format:"%s%n%n%b")
+	pr_log=$(git log $(get_default_branch).. --pretty=format:"%s%n%n%b")
 	echo -e "$pr_log \n"
 	echo "$pr_log" | pbcopy
 	green "Copied to clipboard\n\n"
@@ -238,7 +242,7 @@ latest_commit_message() {
 
 fetch_rebase_master() {
 	fetch
-	git rebase origin/master
+	git rebase origin/$(get_default_branch)
 }
 
 rebase() {
@@ -266,7 +270,7 @@ clean() {
 	clear
 	echo $(green "Cleaning all branches that do not exist on remote:")
 	git remote prune origin
-	git branch --merged master | grep -v '^[ *]*master$' | xargs git branch -d
+	git branch --merged $(get_default_branch) | grep -v '^[ *]*$(get_default_branch)$' | xargs git branch -d
 	echo $(green "Done") && sleep 4
 	all_branches
 }
@@ -354,7 +358,7 @@ display_help() {
 	$(green "gg") $(yellow "can")        $(grey "|") git commit --amend --no-edit
 	$(green "gg") $(yellow "ch <thing>") $(grey "|") git checkout <thing>
 	$(green "gg") $(yellow "pl")         $(grey "|") git pull
-	$(green "gg") $(yellow "cpr")        $(grey "|") git fetch && git rebase origin/master
+	$(green "gg") $(yellow "cpr")        $(grey "|") git fetch && git rebase origin/(default eg. master)
 	$(green "gg") $(yellow "p")          $(grey "|") git push
 	$(green "gg") $(yellow "pf")         $(grey "|") git push force
 	$(green "gg") $(yellow "l")          $(grey "|") git history oneline
@@ -362,13 +366,13 @@ display_help() {
 	$(green "gg") $(yellow "r <number>") $(grey "|") git rebase HEAD~<number> -i
 	$(green "gg") $(yellow "st")         $(grey "|") add all files and stash
 	$(green "gg") $(yellow "stp")        $(grey "|") stash pop latest
-	$(green "gg") $(yellow "clean")      $(grey "|") delete local branches not on master
+	$(green "gg") $(yellow "clean")      $(grey "|") delete local branches not on (default eg. master)
 	$(green "gg") $(yellow "b <name>")   $(grey "|") create and checkout branch <name>, if exists check it out
 	$(green "gg") $(yellow "bd <name>")  $(grey "|") delete branch
 	$(green "gg") $(yellow "cf <scope>") $(grey "|") git commit fixup <scope>
 	$(green "gg") $(yellow "o")          $(grey "|") open repo url
 	$(green "gg") $(yellow "pr")         $(grey "|") create new github pull request for current branch
-	$(green "gg") $(yellow "prl")        $(grey "|") output changed since master in easy pull request format
+	$(green "gg") $(yellow "prl")        $(grey "|") output changed since (default eg. master) in easy pull request format
 	$(green "gg") $(yellow "t")          $(grey "|") create a tag
 	$(green "gg") $(yellow "td <name>")  $(grey "|") delete a tag <name>
 

@@ -14,9 +14,10 @@ setup() {
     gg i
     git config user.email "test@csi.lk"
     git config user.name "gg test"
+    git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/master
     echo "test file" > test_file
-    git add test_file
-    run git commit -m "test commit"
+    git add -A
+    git commit -m "test commit"
 }
 
 # If tests pass delete temp git repo
@@ -61,12 +62,6 @@ teardown() {
     assert_success
     assert_line --partial "Added: test2.md"
     assert_line --partial "new file:   test2.md"
-}
-
-@test "Status" {
-    run gg s
-    assert_success
-    assert_line --partial "On branch master"
 }
 
 @test "Checkout: no param" {
