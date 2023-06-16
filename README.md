@@ -27,6 +27,7 @@ curl -fsSL git.io/fpEqU | bash
 | gg ca             | git commit --amend                                          |
 | gg can            | git commit --amend --no-edit                                |
 | gg ch `<thing>`   | git checkout `<thing>`                                      |
+| gg cm             | git checkout default branch eg. `main` or `master`          |
 | gg pl             | git pull                                                    |
 | gg cpr            | git fetch && git rebase origin/master                       |
 | gg p              | git push                                                    |
@@ -45,7 +46,7 @@ curl -fsSL git.io/fpEqU | bash
 | gg o              | open repo url                                               |
 | gg t              | create a tag                                                |
 | gg td `<name>`    | delete a tag `<name>`                                       |
-| gg z `<commands>` | Combo commands, eg. gg z a c p for gg a && gg c && gg p     |
+| gg z `<commands>` | combo commands, eg. `gg z a c p` for `gg a && gg c && gg p` |
 
 ## Development
 

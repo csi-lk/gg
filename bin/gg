@@ -351,6 +351,10 @@ tag_delete() {
 	fi
 }
 
+checkout_main() {
+	git checkout $(get_default_branch)
+}
+
 combo() {
 	# Combo commands, eg. gg z a c p for gg a && gg c && gg p
 	is_first=true
@@ -378,33 +382,35 @@ display_help() {
 
 		$(green "gg") » simple git aliases $(grey "by Callum Silcock")
 
-		$(green "gg") $(yellow "i")          $(grey "|") git init
-		$(green "gg") $(yellow "s")          $(grey "|") git status
-		$(green "gg") $(yellow "f")          $(grey "|") git fetch
-		$(green "gg") $(yellow "a")          $(grey "|") git add -A
-		$(green "gg") $(yellow "a <file>")   $(grey "|") git add <file>
-		$(green "gg") $(yellow "c")          $(grey "|") git commit (prompts for conventional commit style commits)
-		$(green "gg") $(yellow "ca")         $(grey "|") git commit --amend
-		$(green "gg") $(yellow "can")        $(grey "|") git commit --amend --no-edit
-		$(green "gg") $(yellow "ch <thing>") $(grey "|") git checkout <thing>
-		$(green "gg") $(yellow "pl")         $(grey "|") git pull
-		$(green "gg") $(yellow "cpr")        $(grey "|") git fetch && git rebase origin/(default eg. master)
-		$(green "gg") $(yellow "p")          $(grey "|") git push
-		$(green "gg") $(yellow "pf")         $(grey "|") git push force
-		$(green "gg") $(yellow "l")          $(grey "|") git history oneline
-		$(green "gg") $(yellow "lc")         $(grey "|") git history latest commit
-		$(green "gg") $(yellow "r <number>") $(grey "|") git rebase HEAD~<number> -i
-		$(green "gg") $(yellow "st")         $(grey "|") add all files and stash
-		$(green "gg") $(yellow "stp")        $(grey "|") stash pop latest
-		$(green "gg") $(yellow "clean")      $(grey "|") delete local branches not on (default eg. master)
-		$(green "gg") $(yellow "b <name>")   $(grey "|") create and checkout branch <name>, if exists check it out
-		$(green "gg") $(yellow "bd <name>")  $(grey "|") delete branch
-		$(green "gg") $(yellow "cf <scope>") $(grey "|") git commit fixup <scope>
-		$(green "gg") $(yellow "o")          $(grey "|") open repo url
-		$(green "gg") $(yellow "pr")         $(grey "|") create new github pull request for current branch
-		$(green "gg") $(yellow "prl")        $(grey "|") output changed since (default eg. master) in easy pull request format
-		$(green "gg") $(yellow "t")          $(grey "|") create a tag
-		$(green "gg") $(yellow "td <name>")  $(grey "|") delete a tag <name>
+		$(green "gg") $(yellow "i")            $(grey "|") git init
+		$(green "gg") $(yellow "s")            $(grey "|") git status
+		$(green "gg") $(yellow "f")            $(grey "|") git fetch
+		$(green "gg") $(yellow "a")            $(grey "|") git add -A
+		$(green "gg") $(yellow "a <file>")     $(grey "|") git add <file>
+		$(green "gg") $(yellow "c")            $(grey "|") git commit (prompts for conventional commit style commits)
+		$(green "gg") $(yellow "ca")           $(grey "|") git commit --amend
+		$(green "gg") $(yellow "can")          $(grey "|") git commit --amend --no-edit
+		$(green "gg") $(yellow "ch <thing>")   $(grey "|") git checkout <thing>
+		$(green "gg") $(yellow "cm")           $(grey "|") git checkout default branch eg. main or master
+		$(green "gg") $(yellow "pl")           $(grey "|") git pull
+		$(green "gg") $(yellow "cpr")          $(grey "|") git fetch && git rebase origin/(default eg. master)
+		$(green "gg") $(yellow "p")            $(grey "|") git push
+		$(green "gg") $(yellow "pf")           $(grey "|") git push force
+		$(green "gg") $(yellow "l")            $(grey "|") git history oneline
+		$(green "gg") $(yellow "lc")           $(grey "|") git history latest commit
+		$(green "gg") $(yellow "r <number>")   $(grey "|") git rebase HEAD~<number> -i
+		$(green "gg") $(yellow "st")           $(grey "|") add all files and stash
+		$(green "gg") $(yellow "stp")          $(grey "|") stash pop latest
+		$(green "gg") $(yellow "clean")        $(grey "|") delete local branches not on (default eg. master)
+		$(green "gg") $(yellow "b <name>")     $(grey "|") create and checkout branch <name>, if exists check it out
+		$(green "gg") $(yellow "bd <name>")    $(grey "|") delete branch
+		$(green "gg") $(yellow "cf <scope>")   $(grey "|") git commit fixup <scope>
+		$(green "gg") $(yellow "o")            $(grey "|") open repo url
+		$(green "gg") $(yellow "pr")           $(grey "|") create new github pull request for current branch
+		$(green "gg") $(yellow "prl")          $(grey "|") output changed since (default eg. master) in easy pull request format
+		$(green "gg") $(yellow "t")            $(grey "|") create a tag
+		$(green "gg") $(yellow "td <name>")    $(grey "|") delete a tag <name>
+		$(green "gg") $(yellow "z <commands>") $(grey "|") combo commands, eg. gg z a c p for gg a && gg c && gg p
 
 	EOF
 	exit 0
@@ -432,6 +438,7 @@ else
 			checkout $2
 			exit
 			;;
+		cm | checkout_main | checkout_master) checkout_main ;;
 		pl | pull) pull ;;
 		cpr | fetch_rebase_master) fetch_rebase_master ;;
 		p | push) push ;;
@@ -473,7 +480,7 @@ else
 			combo $@
 			exit
 			;;
-		-h | --help | help) display_help ;;
+		-h | h | --help | help) display_help ;;
 		*)
 			unknown_command "$@"
 			exit 1
