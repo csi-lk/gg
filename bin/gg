@@ -351,6 +351,28 @@ tag_delete() {
 	fi
 }
 
+combo() {
+	# Combo commands, eg. gg z a c p for gg a && gg c && gg p
+	is_first=true
+	while [[ $# -gt 0 ]]; do
+		arg="$1"
+		if [ "$is_first" = false ]; then
+			command="gg $arg"
+			echo $(grey "|> $command")
+			eval "$command"
+			# Check the exit code of the previous command
+			if [[ $? -ne 0 ]]; then
+				echo $(red "C-C-C-Combo BREAKER: Above command failed.")
+				exit 1
+			fi
+		else
+			echo $(blue "C-C-C-Combo time:")
+			is_first=false # Set the flag to indicate it's no longer the first argument
+		fi
+		shift
+	done
+}
+
 display_help() {
 	cat <<-EOF
 
@@ -445,6 +467,10 @@ else
 			;;
 		td | tagdelete)
 			tag_delete $2
+			exit
+			;;
+		z | combo)
+			combo $@
 			exit
 			;;
 		-h | --help | help) display_help ;;
