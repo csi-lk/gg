@@ -355,6 +355,11 @@ checkout_main() {
 	git checkout $(get_default_branch)
 }
 
+reset_to_remote() {
+	fetch
+	git reset --hard origin/$(current_branch)
+}
+
 combo() {
 	# Combo commands, eg. gg z a c p for gg a && gg c && gg p
 	is_first=true
@@ -399,6 +404,7 @@ display_help() {
 		$(green "gg") $(yellow "l")            $(grey "|") git history oneline
 		$(green "gg") $(yellow "lc")           $(grey "|") git history latest commit
 		$(green "gg") $(yellow "r <number>")   $(grey "|") git rebase HEAD~<number> -i
+		$(green "gg") $(yellow "rr")           $(grey "|") reset branch to remote
 		$(green "gg") $(yellow "st")           $(grey "|") add all files and stash
 		$(green "gg") $(yellow "stp")          $(grey "|") stash pop latest
 		$(green "gg") $(yellow "clean")        $(grey "|") delete local branches not on (default eg. master)
@@ -450,6 +456,7 @@ else
 			exit
 			;;
 		rc | continue) rebase_continue ;;
+		rr | reset_remote | reset_to_remote) reset_to_remote ;;
 		st | stash) stash ;;
 		stp | stashpop) stashpop ;;
 		clean | cleanup) clean ;;
