@@ -35,6 +35,7 @@ curl -fsSL git.io/fpEqU | bash
 | gg l              | git history oneline                                         |
 | gg lc             | git history latest commit                                   |
 | gg r `<number>`   | git rebase HEAD~`<number>` -i                               |
+| gg rr             | reset branch to remote                                      |
 | gg st             | add all files and stash                                     |
 | gg stp            | stash pop latest                                            |
 | gg clean          | delete local branches not on master                         |
