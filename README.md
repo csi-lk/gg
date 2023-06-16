@@ -16,35 +16,36 @@ curl -fsSL git.io/fpEqU | bash
 
 ## Usage
 
-| command         | does                                                        |
-| --------------- | ----------------------------------------------------------- |
-| gg i            | git init                                                    |
-| gg s            | git status                                                  |
-| gg f            | git fetch                                                   |
-| gg a            | git add -A                                                  |
-| gg a `<file>`   | git add `<file>`                                            |
-| gg c            | git commit (prompts for conventional commit style commits)  |
-| gg ca           | git commit --amend                                          |
-| gg can          | git commit --amend --no-edit                                |
-| gg ch `<thing>` | git checkout `<thing>`                                      |
-| gg pl           | git pull                                                    |
-| gg cpr          | git fetch && git rebase origin/master                       |
-| gg p            | git push                                                    |
-| gg pf           | git push force                                              |
-| gg l            | git history oneline                                         |
-| gg lc           | git history latest commit                                   |
-| gg r `<number>` | git rebase HEAD~`<number>` -i                               |
-| gg st           | add all files and stash                                     |
-| gg stp          | stash pop latest                                            |
-| gg clean        | delete local branches not on master                         |
-| gg b `<name>`   | create and checkout branch `<name>`, if exists check it out |
-| gg bd `<name>`  | delete branch                                               |
-| gg cf `<scope>` | git commit fixup `<scope>`                                  |
-| gg pr           | create new github pull request for current branch           |
-| gg prl          | output changed since master in easy pr format to clipboard  |
-| gg o            | open repo url                                               |
-| gg t            | create a tag                                                |
-| gg td `<name>`  | delete a tag `<name>`                                       |
+| command           | does                                                        |
+| ----------------- | ----------------------------------------------------------- |
+| gg i              | git init                                                    |
+| gg s              | git status                                                  |
+| gg f              | git fetch                                                   |
+| gg a              | git add -A                                                  |
+| gg a `<file>`     | git add `<file>`                                            |
+| gg c              | git commit (prompts for conventional commit style commits)  |
+| gg ca             | git commit --amend                                          |
+| gg can            | git commit --amend --no-edit                                |
+| gg ch `<thing>`   | git checkout `<thing>`                                      |
+| gg pl             | git pull                                                    |
+| gg cpr            | git fetch && git rebase origin/master                       |
+| gg p              | git push                                                    |
+| gg pf             | git push force                                              |
+| gg l              | git history oneline                                         |
+| gg lc             | git history latest commit                                   |
+| gg r `<number>`   | git rebase HEAD~`<number>` -i                               |
+| gg st             | add all files and stash                                     |
+| gg stp            | stash pop latest                                            |
+| gg clean          | delete local branches not on master                         |
+| gg b `<name>`     | create and checkout branch `<name>`, if exists check it out |
+| gg bd `<name>`    | delete branch                                               |
+| gg cf `<scope>`   | git commit fixup `<scope>`                                  |
+| gg pr             | create new github pull request for current branch           |
+| gg prl            | output changed since master in easy pr format to clipboard  |
+| gg o              | open repo url                                               |
+| gg t              | create a tag                                                |
+| gg td `<name>`    | delete a tag `<name>`                                       |
+| gg z `<commands>` | Combo commands, eg. gg z a c p for gg a && gg c && gg p     |
 
 ## Development
 
