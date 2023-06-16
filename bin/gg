@@ -43,15 +43,15 @@ all_branches() {
 	echo $(blue "All Branches:")
 	while read -r line; do
 		branches_array+=("$line")
-	done <<< "$branches"
-		for branch in "${branches_array[@]}"; do
-			if [ "$branch" == "$(current_branch)" ]; then
-				printf "|- "
-				green "$branch\n"
-			else
-				printf "\e[2m|- %s\n\e[22m" "$branch"
-			fi
-		done
+	done <<<"$branches"
+	for branch in "${branches_array[@]}"; do
+		if [ "$branch" == "$(current_branch)" ]; then
+			printf "|- "
+			green "$branch\n"
+		else
+			printf "\e[2m|- %s\n\e[22m" "$branch"
+		fi
+	done
 }
 
 all_tags() {
@@ -61,10 +61,10 @@ all_tags() {
 	echo $(blue "All Tags:")
 	while read -r line; do
 		tags_array+=("$line")
-	done <<< "$tags"
-		for tag in "${tags_array[@]}"; do
-			printf "\e[2m|- %s\n\e[22m" "$tag"
-		done
+	done <<<"$tags"
+	for tag in "${tags_array[@]}"; do
+		printf "\e[2m|- %s\n\e[22m" "$tag"
+	done
 }
 
 number_of_commits() {
@@ -73,32 +73,32 @@ number_of_commits() {
 
 repo_url() {
 	origin=$(git remote get-url origin)
-	url=${origin/.git} # remove .git
+	url=${origin/.git/} # remove .git
 	# Github
 	url=${url/ssh:\/\/git@github.com\//https://github.com/} # if ssh path replace with https
-	url=${url/git@github.com:/https://github.com/} # if git path replace with https
+	url=${url/git@github.com:/https://github.com/}          # if git path replace with https
 	# Gitlab
 	url=${url/ssh:\/\/git@gitlab.com\//https://gitlab.com/} # if ssh path replace with https
-	url=${url/git@gitlab.com:/https://gitlab.com/} # if git path replace with https
+	url=${url/git@gitlab.com:/https://gitlab.com/}          # if git path replace with https
 	echo $url
 }
 
 err_missing_param() {
 	cat <<-EOF
 
-	$(red "Missing parameter: $1")
-		$(green "gg") $(yellow "$2") $(red "<$1>")
+		$(red "Missing parameter: $1")
+			$(green "gg") $(yellow "$2") $(red "<$1>")
 
-EOF
+	EOF
 	exit 1
 }
 
 unknown_command() {
 	cat <<-EOF
 
-	$(red "Unknown command: '$1'")
+		$(red "Unknown command: '$1'")
 
-EOF
+	EOF
 	exit 1
 }
 
@@ -137,45 +137,52 @@ add() {
 
 commit() {
 	echo $(blue "Let's get committing...")
-	read -n 1 -ep "$(grey "Commit type: (f)eature, fi(x), (b)uild, (c)hore, c(i), (d)ocs, (s)tyle, (p)erformance, (t)est - ")" commit_type;
+	read -n 1 -ep "$(grey "Commit type: (f)eature, fi(x), (b)uild, (c)hore, c(i), (d)ocs, (s)tyle, (p)erformance, (t)est - ")" commit_type
 	case $commit_type in
-		"f"|"F")
-			commit_type="feat";;
-		"x"|"X")
-			commit_type="fix";;
-		"b"|"B")
-			commit_type="build";;
-		"c"|"C")
-			commit_type="chore";;
-		"i"|"I")
-			commit_type="ci";;
-		"d"|"D")
-			commit_type="docs";;
-		"s"|"S")
-			commit_type="style";;
-		"p"|"P")
-			commit_type="perf";;
-		"t"|"T")
-			commit_type="test";;
-		*) 
-			echo "invalid commit type chosen, please chose one of: (f)eature, fi(x), (b)uild, (c)hore, c(i), (d)ocs, (s)tyle, (p)erformance, (t)est"
-			exit 1;;
+	"f" | "F")
+		commit_type="feat"
+		;;
+	"x" | "X")
+		commit_type="fix"
+		;;
+	"b" | "B")
+		commit_type="build"
+		;;
+	"c" | "C")
+		commit_type="chore"
+		;;
+	"i" | "I")
+		commit_type="ci"
+		;;
+	"d" | "D")
+		commit_type="docs"
+		;;
+	"s" | "S")
+		commit_type="style"
+		;;
+	"p" | "P")
+		commit_type="perf"
+		;;
+	"t" | "T")
+		commit_type="test"
+		;;
+	*)
+		echo "invalid commit type chosen, please chose one of: (f)eature, fi(x), (b)uild, (c)hore, c(i), (d)ocs, (s)tyle, (p)erformance, (t)est"
+		exit 1
+		;;
 	esac
 	# "$(echo -e $BOLD$YELLOW"foo bar "$RESET)"
 	read -ep "$(grey "Scope?: ")" input_scope
-	if [[ -z "$input_scope" ]];
-		then 
-			commit_scope=""
-		else
-			commit_scope="($input_scope)"
+	if [[ -z "$input_scope" ]]; then
+		commit_scope=""
+	else
+		commit_scope="($input_scope)"
 	fi
-	while [[ -z "$commit_first_line" ]]
-		do
-			read -ep "$(grey "First Line: ")" commit_first_line
+	while [[ -z "$commit_first_line" ]]; do
+		read -ep "$(grey "First Line: ")" commit_first_line
 	done
-	while [[ -z "$commit_body" ]]
-		do
-			read -ep "$(grey "Body: ")" commit_body
+	while [[ -z "$commit_body" ]]; do
+		read -ep "$(grey "Body: ")" commit_body
 	done
 	read -ep "$(grey "Ticket: ")" commit_ticket
 	echo $(green "Creating Commit...")
@@ -242,6 +249,7 @@ latest_commit_message() {
 
 fetch_rebase_master() {
 	fetch
+	git pull origin $(get_default_branch)
 	git rebase origin/$(get_default_branch)
 }
 
@@ -308,12 +316,12 @@ commit_fixup() {
 
 pull_request() {
 	echo $(green "Opening pull request for branch: $(current_branch)")
-	case "$(repo_url)" in 
-		*github*)
-			open "$(repo_url)/compare/$(current_branch)?quick_pull=1"
+	case "$(repo_url)" in
+	*github*)
+		open "$(repo_url)/compare/$(current_branch)?quick_pull=1"
 		;;
-		*gitlab*)
-			open "$(repo_url)/-/merge_requests/new?merge_request%5Bsource_branch%5D=$(current_branch)"
+	*gitlab*)
+		open "$(repo_url)/-/merge_requests/new?merge_request%5Bsource_branch%5D=$(current_branch)"
 		;;
 	esac
 }
@@ -346,37 +354,37 @@ tag_delete() {
 display_help() {
 	cat <<-EOF
 
-	$(green "gg") » simple git aliases $(grey "by Callum Silcock")
+		$(green "gg") » simple git aliases $(grey "by Callum Silcock")
 
-	$(green "gg") $(yellow "i")          $(grey "|") git init
-	$(green "gg") $(yellow "s")          $(grey "|") git status
-	$(green "gg") $(yellow "f")          $(grey "|") git fetch
-	$(green "gg") $(yellow "a")          $(grey "|") git add -A
-	$(green "gg") $(yellow "a <file>")   $(grey "|") git add <file>
-	$(green "gg") $(yellow "c")          $(grey "|") git commit (prompts for conventional commit style commits)
-	$(green "gg") $(yellow "ca")         $(grey "|") git commit --amend
-	$(green "gg") $(yellow "can")        $(grey "|") git commit --amend --no-edit
-	$(green "gg") $(yellow "ch <thing>") $(grey "|") git checkout <thing>
-	$(green "gg") $(yellow "pl")         $(grey "|") git pull
-	$(green "gg") $(yellow "cpr")        $(grey "|") git fetch && git rebase origin/(default eg. master)
-	$(green "gg") $(yellow "p")          $(grey "|") git push
-	$(green "gg") $(yellow "pf")         $(grey "|") git push force
-	$(green "gg") $(yellow "l")          $(grey "|") git history oneline
-	$(green "gg") $(yellow "lc")         $(grey "|") git history latest commit
-	$(green "gg") $(yellow "r <number>") $(grey "|") git rebase HEAD~<number> -i
-	$(green "gg") $(yellow "st")         $(grey "|") add all files and stash
-	$(green "gg") $(yellow "stp")        $(grey "|") stash pop latest
-	$(green "gg") $(yellow "clean")      $(grey "|") delete local branches not on (default eg. master)
-	$(green "gg") $(yellow "b <name>")   $(grey "|") create and checkout branch <name>, if exists check it out
-	$(green "gg") $(yellow "bd <name>")  $(grey "|") delete branch
-	$(green "gg") $(yellow "cf <scope>") $(grey "|") git commit fixup <scope>
-	$(green "gg") $(yellow "o")          $(grey "|") open repo url
-	$(green "gg") $(yellow "pr")         $(grey "|") create new github pull request for current branch
-	$(green "gg") $(yellow "prl")        $(grey "|") output changed since (default eg. master) in easy pull request format
-	$(green "gg") $(yellow "t")          $(grey "|") create a tag
-	$(green "gg") $(yellow "td <name>")  $(grey "|") delete a tag <name>
+		$(green "gg") $(yellow "i")          $(grey "|") git init
+		$(green "gg") $(yellow "s")          $(grey "|") git status
+		$(green "gg") $(yellow "f")          $(grey "|") git fetch
+		$(green "gg") $(yellow "a")          $(grey "|") git add -A
+		$(green "gg") $(yellow "a <file>")   $(grey "|") git add <file>
+		$(green "gg") $(yellow "c")          $(grey "|") git commit (prompts for conventional commit style commits)
+		$(green "gg") $(yellow "ca")         $(grey "|") git commit --amend
+		$(green "gg") $(yellow "can")        $(grey "|") git commit --amend --no-edit
+		$(green "gg") $(yellow "ch <thing>") $(grey "|") git checkout <thing>
+		$(green "gg") $(yellow "pl")         $(grey "|") git pull
+		$(green "gg") $(yellow "cpr")        $(grey "|") git fetch && git rebase origin/(default eg. master)
+		$(green "gg") $(yellow "p")          $(grey "|") git push
+		$(green "gg") $(yellow "pf")         $(grey "|") git push force
+		$(green "gg") $(yellow "l")          $(grey "|") git history oneline
+		$(green "gg") $(yellow "lc")         $(grey "|") git history latest commit
+		$(green "gg") $(yellow "r <number>") $(grey "|") git rebase HEAD~<number> -i
+		$(green "gg") $(yellow "st")         $(grey "|") add all files and stash
+		$(green "gg") $(yellow "stp")        $(grey "|") stash pop latest
+		$(green "gg") $(yellow "clean")      $(grey "|") delete local branches not on (default eg. master)
+		$(green "gg") $(yellow "b <name>")   $(grey "|") create and checkout branch <name>, if exists check it out
+		$(green "gg") $(yellow "bd <name>")  $(grey "|") delete branch
+		$(green "gg") $(yellow "cf <scope>") $(grey "|") git commit fixup <scope>
+		$(green "gg") $(yellow "o")          $(grey "|") open repo url
+		$(green "gg") $(yellow "pr")         $(grey "|") create new github pull request for current branch
+		$(green "gg") $(yellow "prl")        $(grey "|") output changed since (default eg. master) in easy pull request format
+		$(green "gg") $(yellow "t")          $(grey "|") create a tag
+		$(green "gg") $(yellow "td <name>")  $(grey "|") delete a tag <name>
 
-EOF
+	EOF
 	exit 0
 }
 
@@ -388,35 +396,62 @@ if test $# -eq 0; then
 else
 	while test $# -ne 0; do
 		case $1 in
-			i|init) init ;;
-			s|status) status ;;
-			f|fetch) fetch ;;
-			a|add) add $2; exit ;;
-			c|commit) commit ;;
-			ca|commit_amend) commit_amend ;;
-			can|commit_amend_no_edit) commit_amend_no_edit ;;
-			ch|checkout) checkout $2; exit ;;
-			pl|pull) pull ;;
-			cpr|fetch_rebase_master) fetch_rebase_master ;;
-			p|push) push ;;
-			pf|fp|force|pushforce) push_force ;;
-			l|log|hist|history) log ;;
-			lc|latest|latest_commit) latest_commit_message ;;
-			r|rebase) rebase $2; exit ;;
-			rc|continue) rebase_continue ;;
-			st|stash) stash ;;
-			stp|stashpop) stashpop ;;
-			clean|cleanup) clean ;;
-			b|branch) branch $2; exit ;;
-			bd|branch_delete) branch_delete $2; exit ;;
-			cf|fix|fixup) commit_fixup $2; exit ;;
-			pr|pullrequest) pull_request ;;
-			prl|pullrequestlog) pull_request_log ;;
-			o|open) open_url ;;
-			t|tag) tag $2; exit ;;
-			td|tagdelete) tag_delete $2; exit ;;
-			-h|--help|help) display_help ;;
-			*) unknown_command "$@"; exit 1 ;;
+		i | init) init ;;
+		s | status) status ;;
+		f | fetch) fetch ;;
+		a | add)
+			add $2
+			exit
+			;;
+		c | commit) commit ;;
+		ca | commit_amend) commit_amend ;;
+		can | commit_amend_no_edit) commit_amend_no_edit ;;
+		ch | checkout)
+			checkout $2
+			exit
+			;;
+		pl | pull) pull ;;
+		cpr | fetch_rebase_master) fetch_rebase_master ;;
+		p | push) push ;;
+		pf | fp | force | pushforce) push_force ;;
+		l | log | hist | history) log ;;
+		lc | latest | latest_commit) latest_commit_message ;;
+		r | rebase)
+			rebase $2
+			exit
+			;;
+		rc | continue) rebase_continue ;;
+		st | stash) stash ;;
+		stp | stashpop) stashpop ;;
+		clean | cleanup) clean ;;
+		b | branch)
+			branch $2
+			exit
+			;;
+		bd | branch_delete)
+			branch_delete $2
+			exit
+			;;
+		cf | fix | fixup)
+			commit_fixup $2
+			exit
+			;;
+		pr | pullrequest) pull_request ;;
+		prl | pullrequestlog) pull_request_log ;;
+		o | open) open_url ;;
+		t | tag)
+			tag $2
+			exit
+			;;
+		td | tagdelete)
+			tag_delete $2
+			exit
+			;;
+		-h | --help | help) display_help ;;
+		*)
+			unknown_command "$@"
+			exit 1
+			;;
 		esac
 		shift
 	done
