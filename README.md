@@ -11,7 +11,15 @@ There is still a lot TODO, i'll get around to it as I need it :)
 ### Linux / MacOS
 
 ```bash
-curl -fsSL git.io/fpEqU | bash
+curl -fsSL https://raw.githubusercontent.com/csi-lk/gg/master/install.sh | bash
+```
+
+Or clone and run locally:
+
+```bash
+git clone https://github.com/csi-lk/gg.git
+cd gg
+bash install.sh
 ```
 
 ## Usage
