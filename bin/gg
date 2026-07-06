@@ -1,28 +1,34 @@
 #!/usr/bin/env bash
 
-VERSION="1.0.0"
+# -e is intentionally omitted: git commands returning non-zero (e.g. a push
+# with no upstream, or `clear` with no $TERM) is normal here and must not abort.
+set -uo pipefail
+
+VERSION="1.1.0"
 
 # Colors and formatting
 # --------------------------------------------------------------------
+# Use %b so callers can pass "\n" etc, while the text itself is treated
+# as data (never as a printf format string).
 
 grey() {
-	printf "\e[0;90m$1\e[0m"
+	printf '\e[0;90m%b\e[0m' "$1"
 }
 
 green() {
-	printf "\e[0;32m$1\e[0m"
+	printf '\e[0;32m%b\e[0m' "$1"
 }
 
 red() {
-	printf "\e[1;31m$1\e[0m"
+	printf '\e[1;31m%b\e[0m' "$1"
 }
 
 yellow() {
-	printf "\e[0;33m$1\e[0m"
+	printf '\e[0;33m%b\e[0m' "$1"
 }
 
 blue() {
-	printf "\e[0;36m$1\e[0m"
+	printf '\e[0;36m%b\e[0m' "$1"
 }
 
 # Utility
@@ -33,45 +39,52 @@ current_branch() {
 }
 
 get_default_branch() {
-	git symbolic-ref --short refs/remotes/origin/HEAD | sed 's@^origin/@@'
+	# Prefer the remote's advertised default branch...
+	local branch
+	branch=$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's@^origin/@@')
+	if [ -n "$branch" ]; then
+		echo "$branch"
+		return
+	fi
+	# ...otherwise fall back to whichever of main/master exists.
+	if git show-ref --verify --quiet refs/heads/main; then
+		echo "main"
+	else
+		echo "master"
+	fi
 }
 
 all_branches() {
 	clear
+	local branches branch
 	branches=$(git for-each-ref --format='%(refname:short)' refs/heads/)
-	branches_array=()
-	echo $(blue "All Branches:")
-	while read -r line; do
-		branches_array+=("$line")
-	done <<<"$branches"
-	for branch in "${branches_array[@]}"; do
+	blue "All Branches:\n"
+	while read -r branch; do
 		if [ "$branch" == "$(current_branch)" ]; then
 			printf "|- "
 			green "$branch\n"
 		else
 			printf "\e[2m|- %s\n\e[22m" "$branch"
 		fi
-	done
+	done <<<"$branches"
 }
 
 all_tags() {
 	clear
+	local tags tag
 	tags=$(git tag)
-	tags_array=()
-	echo $(blue "All Tags:")
-	while read -r line; do
-		tags_array+=("$line")
-	done <<<"$tags"
-	for tag in "${tags_array[@]}"; do
+	blue "All Tags:\n"
+	while read -r tag; do
 		printf "\e[2m|- %s\n\e[22m" "$tag"
-	done
+	done <<<"$tags"
 }
 
 number_of_commits() {
-	git rev-list --count HEAD ^$(get_default_branch)
+	git rev-list --count "HEAD" "^$(get_default_branch)"
 }
 
 repo_url() {
+	local origin url
 	origin=$(git remote get-url origin)
 	url=${origin/.git/} # remove .git
 	# Github
@@ -80,7 +93,7 @@ repo_url() {
 	# Gitlab
 	url=${url/ssh:\/\/git@gitlab.com\//https://gitlab.com/} # if ssh path replace with https
 	url=${url/git@gitlab.com:/https://gitlab.com/}          # if git path replace with https
-	echo $url
+	echo "$url"
 }
 
 err_missing_param() {
@@ -105,11 +118,16 @@ unknown_command() {
 # Commands
 # --------------------------------------------------------------------
 
+version() {
+	printf 'gg version %s\n' "$VERSION"
+}
+
 init() {
 	# TODO: Color output
 	clear
-	output=($(git init))
-	green "\n${output[0]} ${output[1]} Git repository.\n\n"
+	local output
+	output=$(git init)
+	green "\n$output\n\n"
 }
 
 status() {
@@ -119,25 +137,26 @@ status() {
 }
 
 fetch() {
-	echo $(green "Fetching...")
+	green "Fetching...\n"
 	git fetch
 }
 
 add() {
-	if [ -z "$1" ]; then
+	if [ -z "${1:-}" ]; then
 		git add -A
-		echo $(green "Added all files")
+		green "Added all files\n"
 	else
-		toAdd="$1"
-		echo $(green "Added: $toAdd")
-		git add $toAdd
+		local toAdd="$1"
+		green "Added: $toAdd\n"
+		git add "$toAdd"
 	fi
 	git status
 }
 
 commit() {
-	echo $(blue "Let's get committing...")
-	read -n 1 -ep "$(grey "Commit type: (f)eature, fi(x), (b)uild, (c)hore, c(i), (d)ocs, (s)tyle, (p)erformance, (t)est - ")" commit_type
+	blue "Let's get committing...\n"
+	local commit_type commit_scope input_scope commit_first_line commit_body commit_ticket
+	read -rn 1 -ep "$(grey "Commit type: (f)eature, fi(x), (b)uild, (c)hore, c(i), (d)ocs, (s)tyle, (p)erformance, (t)est - ")" commit_type
 	case $commit_type in
 	"f" | "F")
 		commit_type="feat"
@@ -171,24 +190,23 @@ commit() {
 		exit 1
 		;;
 	esac
-	# "$(echo -e $BOLD$YELLOW"foo bar "$RESET)"
-	read -ep "$(grey "Scope?: ")" input_scope
+	read -rep "$(grey "Scope?: ")" input_scope
 	if [[ -z "$input_scope" ]]; then
 		commit_scope=""
 	else
 		commit_scope="($input_scope)"
 	fi
-	while [[ -z "$commit_first_line" ]]; do
-		read -ep "$(grey "First Line: ")" commit_first_line
+	while [[ -z "${commit_first_line:-}" ]]; do
+		read -rep "$(grey "First Line: ")" commit_first_line
 	done
-	while [[ -z "$commit_body" ]]; do
-		read -ep "$(grey "Body: ")" commit_body
+	while [[ -z "${commit_body:-}" ]]; do
+		read -rep "$(grey "Body: ")" commit_body
 	done
-	read -ep "$(grey "Ticket: ")" commit_ticket
-	echo $(green "Creating Commit...")
-	echo $(grey "  $commit_type$commit_scope: $commit_first_line")
-	echo $(grey "  $commit_body")
-	echo $(grey "  $commit_ticket")
+	read -rep "$(grey "Ticket: ")" commit_ticket
+	green "Creating Commit...\n"
+	grey "  $commit_type$commit_scope: $commit_first_line\n"
+	grey "  $commit_body\n"
+	grey "  $commit_ticket\n"
 	git commit -m "$commit_type$commit_scope: $commit_first_line" -m "$commit_body" -m "$commit_ticket"
 }
 
@@ -203,12 +221,10 @@ commit_amend_no_edit() {
 checkout() {
 	# TODO: Color output
 	# TODO: Success message
-	if [ -z "$1" ]; then
+	if [ -z "${1:-}" ]; then
 		err_missing_param "thing to checkout" "ch"
-		exit 1
 	else
-		checkoutItem="$1"
-		git checkout $checkoutItem
+		git checkout "$1"
 	fi
 }
 
@@ -220,12 +236,12 @@ pull() {
 push() {
 	# TODO: Color output
 	# TODO: Check if anything to push
-	git push --set-upstream origin $(current_branch)
+	git push --set-upstream origin "$(current_branch)"
 }
 
 push_force() {
 	# TODO: Color output
-	echo $(red "Strap in, we're force pushing...")
+	red "Strap in, we're force pushing...\n"
 	git push --force
 }
 
@@ -237,7 +253,8 @@ log() {
 pull_request_log() {
 	clear
 	grey "Log output for PR...\n\n"
-	pr_log=$(git log $(get_default_branch).. --pretty=format:"%s%n%n%b")
+	local pr_log
+	pr_log=$(git log "$(get_default_branch).." --pretty=format:"%s%n%n%b")
 	echo -e "$pr_log \n"
 	echo "$pr_log" | pbcopy
 	green "Copied to clipboard\n\n"
@@ -249,17 +266,18 @@ latest_commit_message() {
 
 fetch_rebase_master() {
 	fetch
-	git pull origin $(get_default_branch)
-	git rebase origin/$(get_default_branch)
+	git pull origin "$(get_default_branch)"
+	git rebase "origin/$(get_default_branch)"
 }
 
 rebase() {
-	if [ -z "$1" ]; then
+	local numCommits
+	if [ -z "${1:-}" ]; then
 		numCommits=$(number_of_commits)
 	else
 		numCommits="$1"
 	fi
-	git rebase HEAD~$numCommits -i
+	git rebase "HEAD~$numCommits" -i
 }
 
 rebase_continue() {
@@ -276,46 +294,48 @@ stashpop() {
 
 clean() {
 	clear
-	echo $(green "Cleaning all branches that do not exist on remote:")
+	local default_branch
+	default_branch=$(get_default_branch)
+	green "Cleaning all branches that do not exist on remote:\n"
 	git remote prune origin
-	git branch --merged $(get_default_branch) | grep -v '^[ *]*$(get_default_branch)$' | xargs git branch -d
-	echo $(green "Done") && sleep 4
+	git branch --merged "$default_branch" | grep -v "^[ *]*${default_branch}\$" | xargs -r git branch -d
+	green "Done\n" && sleep 4
 	all_branches
 }
 
 branch() {
 	# TODO: Color output
 	# TODO: Handle branch already existing
-	if [ -z "$1" ]; then
+	if [ -z "${1:-}" ]; then
 		all_branches
 	else
-		git checkout -b $1
+		git checkout -b "$1"
 	fi
 }
 
 branch_delete() {
 	# TODO: Color output
 	# TODO: Handle branch not existing for delete
-	if [ -z "$1" ]; then
+	if [ -z "${1:-}" ]; then
 		err_missing_param "branch name to delete" "bd"
 	else
-		git branch -D $1
+		git branch -D "$1"
 	fi
 }
 
 commit_fixup() {
 	# TODO: Handle scoping
-	if [ -z "$1" ]; then
+	if [ -z "${1:-}" ]; then
 		err_missing_param "scope to commit fixup" "cf"
 	else
-		echo $(green "Creating fixup commit for $1:")
+		green "Creating fixup commit for $1:\n"
 		git commit -m "fixup $1" --no-verify
-		rebase $(number_of_commits)
+		rebase "$(number_of_commits)"
 	fi
 }
 
 pull_request() {
-	echo $(green "Opening pull request for branch: $(current_branch)")
+	green "Opening pull request for branch: $(current_branch)\n"
 	case "$(repo_url)" in
 	*github*)
 		open "$(repo_url)/compare/$(current_branch)?quick_pull=1"
@@ -327,55 +347,53 @@ pull_request() {
 }
 
 open_url() {
-	echo $(green "Opening repo url: $(repo_url)")
-	open $(repo_url)
+	green "Opening repo url: $(repo_url)\n"
+	open "$(repo_url)"
 }
 
 tag() {
 	# TODO: Color output
 	# TODO: Handle tag already existing
-	if [ -z "$1" ]; then
+	if [ -z "${1:-}" ]; then
 		all_tags
 	else
-		git tag $1
+		git tag "$1"
 	fi
 }
 
 tag_delete() {
 	# TODO: Color output
 	# TODO: Handle tag not existing to delete
-	if [ -z "$1" ]; then
+	if [ -z "${1:-}" ]; then
 		err_missing_param "tag name to delete" "td"
 	else
-		git tag -d $1
+		git tag -d "$1"
 	fi
 }
 
 checkout_main() {
-	git checkout $(get_default_branch)
+	git checkout "$(get_default_branch)"
 }
 
 reset_to_remote() {
 	fetch
-	git reset --hard origin/$(current_branch)
+	git reset --hard "origin/$(current_branch)"
 }
 
 combo() {
 	# Combo commands, eg. gg z a c p for gg a && gg c && gg p
-	is_first=true
+	local is_first=true arg command
 	while [[ $# -gt 0 ]]; do
 		arg="$1"
 		if [ "$is_first" = false ]; then
 			command="gg $arg"
-			echo $(grey "|> $command")
-			eval "$command"
-			# Check the exit code of the previous command
-			if [[ $? -ne 0 ]]; then
-				echo $(red "C-C-C-Combo BREAKER: Above command failed.")
+			grey "|> $command\n"
+			if ! eval "$command"; then
+				red "C-C-C-Combo BREAKER: Above command failed.\n"
 				exit 1
 			fi
 		else
-			echo $(blue "C-C-C-Combo time:")
+			blue "C-C-C-Combo time:\n"
 			is_first=false # Set the flag to indicate it's no longer the first argument
 		fi
 		shift
@@ -417,6 +435,7 @@ display_help() {
 		$(green "gg") $(yellow "t")            $(grey "|") create a tag
 		$(green "gg") $(yellow "td <name>")    $(grey "|") delete a tag <name>
 		$(green "gg") $(yellow "z <commands>") $(grey "|") combo commands, eg. gg z a c p for gg a && gg c && gg p
+		$(green "gg") $(yellow "-V")           $(grey "|") print version
 
 	EOF
 	exit 0
@@ -434,14 +453,14 @@ else
 		s | status) status ;;
 		f | fetch) fetch ;;
 		a | add)
-			add $2
+			add "${2:-}"
 			exit
 			;;
 		c | commit) commit ;;
 		ca | commit_amend) commit_amend ;;
 		can | commit_amend_no_edit) commit_amend_no_edit ;;
 		ch | checkout)
-			checkout $2
+			checkout "${2:-}"
 			exit
 			;;
 		cm | checkout_main | checkout_master) checkout_main ;;
@@ -452,7 +471,7 @@ else
 		l | log | hist | history) log ;;
 		lc | latest | latest_commit) latest_commit_message ;;
 		r | rebase)
-			rebase $2
+			rebase "${2:-}"
 			exit
 			;;
 		rc | continue) rebase_continue ;;
@@ -461,36 +480,36 @@ else
 		stp | stashpop) stashpop ;;
 		clean | cleanup) clean ;;
 		b | branch)
-			branch $2
+			branch "${2:-}"
 			exit
 			;;
 		bd | branch_delete)
-			branch_delete $2
+			branch_delete "${2:-}"
 			exit
 			;;
 		cf | fix | fixup)
-			commit_fixup $2
+			commit_fixup "${2:-}"
 			exit
 			;;
 		pr | pullrequest) pull_request ;;
 		prl | pullrequestlog) pull_request_log ;;
 		o | open) open_url ;;
 		t | tag)
-			tag $2
+			tag "${2:-}"
 			exit
 			;;
 		td | tagdelete)
-			tag_delete $2
+			tag_delete "${2:-}"
 			exit
 			;;
 		z | combo)
-			combo $@
+			combo "$@"
 			exit
 			;;
+		-V | --version) version ;;
 		-h | h | --help | help) display_help ;;
 		*)
 			unknown_command "$@"
-			exit 1
 			;;
 		esac
 		shift

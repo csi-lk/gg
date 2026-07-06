@@ -3,6 +3,10 @@
 load 'lib/bats-support/load'
 load 'lib/bats-assert/load'
 
+# Stub `open` so `gg pr` / `gg o` don't launch a real browser during tests
+open() { echo "open $*"; }
+export -f open
+
 TMP_DIRECTORY=$(mktemp -d)
 
 # Setup git repo in temp dir to test functions against
@@ -256,4 +260,28 @@ teardown() {
     run gg clean
     assert_success
     assert_line --partial "All Branches:"
+}
+
+@test "Clean: keeps the default branch" {
+    git branch feature
+    git checkout feature
+    git checkout master
+    git merge feature
+    run gg clean
+    assert_success
+    # master (the default) must survive, merged feature branch is removed
+    assert_line --partial "master"
+    refute_line --partial "|- feature"
+}
+
+@test "Version" {
+    run gg -V
+    assert_success
+    assert_line --partial "gg version"
+}
+
+@test "Version: long flag" {
+    run gg --version
+    assert_success
+    assert_line --partial "gg version"
 }
