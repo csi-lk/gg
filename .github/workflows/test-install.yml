@@ -1,0 +1,29 @@
+name: Test Install Script
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  install:
+    name: install.sh (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run install script
+        run: bash ./install.sh
+
+      - name: Verify gg is on PATH and runs
+        run: |
+          # install.sh may drop gg in ~/.local/bin, which isn't on PATH yet
+          export PATH="$HOME/.local/bin:$PATH"
+          if ! command -v gg >/dev/null 2>&1; then
+            echo "::error::gg was not found on PATH after install"
+            exit 1
+          fi
+          gg --version
