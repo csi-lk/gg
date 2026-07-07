@@ -285,3 +285,13 @@ teardown() {
     assert_success
     assert_line --partial "gg version"
 }
+
+@test "Upgrade: is a recognised command" {
+    # Stub curl to fail so we hit the offline guard instead of the network
+    curl() { return 1; }
+    export -f curl
+    run gg up
+    assert_failure
+    refute_line --partial "Unknown command"
+    assert_line --partial "Couldn't reach GitHub"
+}

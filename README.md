@@ -56,6 +56,7 @@ bash install.sh
 | gg t              | create a tag                                                |
 | gg td `<name>`    | delete a tag `<name>`                                       |
 | gg z `<commands>` | combo commands, eg. `gg z a c p` for `gg a && gg c && gg p` |
+| gg up             | check for and install the latest version                    |
 
 ## Development
 
