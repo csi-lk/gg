@@ -6,6 +6,9 @@ set -uo pipefail
 
 VERSION="1.1.0"
 
+REMOTE_GG_URL="https://raw.githubusercontent.com/csi-lk/gg/master/bin/gg"
+INSTALL_URL="https://raw.githubusercontent.com/csi-lk/gg/master/install.sh"
+
 # Colors and formatting
 # --------------------------------------------------------------------
 # Use %b so callers can pass "\n" etc, while the text itself is treated
@@ -120,6 +123,35 @@ unknown_command() {
 
 version() {
 	printf 'gg version %s\n' "$VERSION"
+}
+
+remote_version() {
+	# Print the VERSION="x.y.z" value from bin/gg on master, or empty on failure.
+	curl -fsSL "$REMOTE_GG_URL" 2>/dev/null |
+		grep -m1 '^VERSION=' |
+		sed -E 's/^VERSION="?([^"]*)"?/\1/'
+}
+
+upgrade() {
+	if ! command -v curl &>/dev/null; then
+		red "curl is required to upgrade gg\n"
+		grey "  Install manually: $INSTALL_URL\n"
+		exit 1
+	fi
+	green "Checking for updates...\n"
+	local latest
+	latest=$(remote_version)
+	if [ -z "$latest" ]; then
+		red "Couldn't reach GitHub to check for updates\n"
+		exit 1
+	fi
+	if [ "$latest" == "$VERSION" ]; then
+		green "gg is up to date (v$VERSION)\n"
+		return
+	fi
+	yellow "Update available: $VERSION → $latest\n"
+	green "Upgrading...\n"
+	curl -fsSL "$INSTALL_URL" | bash
 }
 
 init() {
@@ -435,6 +467,7 @@ display_help() {
 		$(green "gg") $(yellow "t")            $(grey "|") create a tag
 		$(green "gg") $(yellow "td <name>")    $(grey "|") delete a tag <name>
 		$(green "gg") $(yellow "z <commands>") $(grey "|") combo commands, eg. gg z a c p for gg a && gg c && gg p
+		$(green "gg") $(yellow "up")           $(grey "|") check for and install the latest version
 		$(green "gg") $(yellow "-V")           $(grey "|") print version
 
 	EOF
@@ -506,6 +539,7 @@ else
 			combo "$@"
 			exit
 			;;
+		up | upgrade | update) upgrade ;;
 		-V | --version) version ;;
 		-h | h | --help | help) display_help ;;
 		*)
